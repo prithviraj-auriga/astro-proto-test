@@ -1,0 +1,565 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Astro App Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single phone-sized app centred on a night-sky stage; on a real phone the app fills the screen. */
+:root{
+  --ink:#1C1940; --indigo:#1E1B4B; --indigo2:#2D2A66; --indigo3:#3B3680; --gold:#F2B544; --gold-ink:#6E4100;
+  --mist:#F6F4FA; --line:#E6E2F0; --line2:#F0EDF6; --muted:#5E5A7A; --soft:#C9C5E8; --cream:#FDF3DE; --white:#FFFFFF;
+  --good:#1D7046; --good-bg:#E3F5EC; --bad:#B42318; --bad-bg:#FEF3F2; --stage:#14123A;
+  --display:'Marcellus', Georgia, serif; --body:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--stage);color:var(--ink);font-family:var(--body);font-size:14px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.stage{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding-block:20px}
+.hint{color:var(--soft);font-size:12px;text-align:center;max-width:390px;line-height:1.5}
+.hint b{color:var(--gold)}
+.phone{position:relative;width:min(390px,100%);height:min(844px, calc(100dvh - 90px));min-height:600px;background:var(--white);border-radius:36px;overflow:hidden;box-shadow:0 0 0 10px #0B0A26, 0 30px 80px rgba(0,0,0,.5);display:flex;flex-direction:column}
+@media (max-width:460px){
+  body{padding-left:0;padding-right:0}
+  .stage{padding-block:0;gap:0;justify-content:flex-start;min-height:0;height:100vh;height:100dvh}
+  .hint{display:none}
+  .phone{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;box-shadow:none}
+}
+@media (max-height:700px) and (max-width:900px){
+  .stage{padding-block:0;gap:0;justify-content:flex-start;min-height:0;height:100vh;height:100dvh}
+  .hint{display:none}
+  .phone{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;box-shadow:none}
+}
+.scr{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;background:var(--white)}
+.scr.mist{background:var(--mist)}
+.scr.dark{background:var(--indigo);color:var(--white)}
+.pad{padding:16px 20px 24px;display:flex;flex-direction:column;gap:16px}
+.grow{flex:1}
+h1,h2,h3,p{margin:0}
+.disp{font-family:var(--display);font-weight:400}
+.h1{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.2;text-wrap:balance}
+.h2{font-family:var(--display);font-weight:400;font-size:20px}
+.h3{font-size:15px;font-weight:700}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.lead{font-size:14px;line-height:1.55;color:var(--muted)}
+.topbar{height:52px;display:flex;align-items:center;gap:4px;padding:4px 12px 0 10px;flex:0 0 auto}
+.topbar .title{font-family:var(--display);font-size:22px}
+.iconbtn{width:44px;height:44px;border:0;background:none;border-radius:22px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:pointer;padding:0;flex:0 0 44px}
+.iconbtn:hover{background:rgba(30,27,75,.06)}
+.dark .iconbtn:hover,.hdr .iconbtn:hover{background:rgba(255,255,255,.1)}
+button,input,textarea,select{font-family:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{height:52px;border-radius:14px;border:0;background:var(--indigo);color:var(--white);font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;width:100%;flex:0 0 auto;text-decoration:none}
+.btn:hover{background:var(--indigo2)}
+.btn.gold{background:var(--gold);color:var(--indigo)}
+.btn.ghost{background:none;color:var(--indigo);height:44px;font-size:15px}
+.btn.outline{background:var(--white);color:var(--indigo);border:1.5px solid var(--indigo)}
+.btn.danger{background:var(--bad)}
+.btn.sm{height:40px;font-size:14px;width:auto;padding:0 16px;border-radius:12px}
+.btn[disabled]{background:var(--line);color:#8C88A6;cursor:default}
+.link{border:0;background:none;color:var(--indigo);font-weight:600;cursor:pointer;padding:8px 0;font-size:13px}
+.field{display:flex;flex-direction:column;gap:8px}
+.field label,.lbl{font-size:13px;font-weight:600}
+.input{height:52px;border:1.5px solid var(--line);border-radius:12px;padding:0 16px;font-size:16px;font-weight:500;color:var(--ink);background:var(--white);width:100%;min-width:0}
+.input:focus{border-color:var(--indigo);outline:none}
+textarea.input{height:auto;padding:12px 14px;font-size:14px;resize:none;line-height:1.5}
+.row{display:flex;gap:10px;align-items:center}
+.prefix{height:52px;padding:0 14px;border:1.5px solid var(--line);border-radius:12px;display:flex;align-items:center;font-weight:600;font-size:16px;flex:0 0 auto}
+.card{background:var(--white);border:1px solid var(--line);border-radius:18px}
+.cardpad{padding:14px 16px}
+.list>*+*{border-top:1px solid var(--line2)}
+.li{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:52px;width:100%;border:0;background:none;text-align:left;color:var(--ink);cursor:pointer;font-size:15px}
+.li:hover{background:#FAF9FD}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto}
+.chip{height:38px;padding:0 14px;border-radius:19px;border:1.5px solid var(--line);background:var(--white);font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;flex:0 0 auto;white-space:nowrap}
+.chip.on{background:var(--indigo);border-color:var(--indigo);color:var(--white)}
+.hscroll{display:flex;gap:8px;overflow-x:auto;padding:0 20px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.seg{display:grid;gap:4px;background:#E9E6F2;border-radius:12px;padding:4px}
+.seg button{height:40px;border:0;border-radius:9px;background:none;font-weight:600;font-size:13px;color:#3E3A5E;cursor:pointer}
+.seg button.on{background:var(--white);color:var(--indigo)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;white-space:nowrap}
+.b-good{background:var(--good-bg);color:#155C39}.b-warn{background:var(--cream);color:var(--gold-ink)}
+.note{display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--cream);color:var(--gold-ink);font-size:13px;line-height:1.45}
+.note.bad{background:var(--bad-bg);color:#8F1D14;border:1px solid #F4C7C3}
+.hdr{background:var(--indigo);color:var(--white);padding:8px 20px 22px;display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.hdr .topbar{padding:0;margin-left:-10px;height:44px}
+.hdr .sub{font-size:13px;color:var(--soft)}
+.tabs{background:var(--white);border-bottom:1px solid var(--line);padding:10px 0;flex:0 0 auto;position:sticky;top:0;z-index:2}
+.tab{height:38px;padding:0 14px;border-radius:19px;border:0;background:var(--mist);color:#3E3A5E;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer;flex:0 0 auto}
+.tab.on{background:var(--indigo);color:var(--white)}
+.tab.all{background:var(--white);border:1.5px solid var(--indigo);color:var(--indigo);display:flex;align-items:center;gap:6px;font-weight:700}
+.nav{display:flex;background:var(--white);border-top:1px solid var(--line);padding:6px 8px calc(10px + env(safe-area-inset-bottom, 0px));flex:0 0 auto}
+.nav button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;padding:4px 0}
+.nav button .pill{width:52px;height:30px;border-radius:15px;display:flex;align-items:center;justify-content:center}
+.nav button.on{color:var(--indigo);font-weight:700}
+.nav button.on .pill{background:var(--cream)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{min-height:60px;padding:10px 12px;border-radius:16px;background:var(--white);border:1px solid var(--line);display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;color:var(--ink);font-size:14px;font-weight:600;line-height:1.25}
+.tile:hover{border-color:#B9B3D6}
+.tile .ib{width:36px;height:36px;border-radius:10px;background:#EDEAF7;color:var(--indigo);display:flex;align-items:center;justify-content:center;flex:0 0 36px}
+.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.otp input{height:56px;border:1.5px solid var(--line);border-radius:12px;text-align:center;font-size:22px;font-weight:600;width:100%;color:var(--ink)}
+.otp input:focus{border-color:var(--indigo);outline:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:11px 14px;text-align:left}
+thead tr{background:#EDEAF7}
+thead th{font-size:12px;font-weight:700;color:#3E3A5E}
+tbody tr{border-top:1px solid var(--line2)}
+.num{font-variant-numeric:tabular-nums}
+.sheetwrap{position:absolute;inset:0;background:rgba(20,18,50,.55);display:flex;align-items:flex-end;z-index:20}
+.sheet{width:100%;background:var(--white);border-radius:28px 28px 0 0;padding:12px 24px calc(28px + env(safe-area-inset-bottom, 0px));display:flex;flex-direction:column;gap:14px;color:var(--ink)}
+.grab{align-self:center;width:40px;height:4px;border-radius:2px;background:var(--line)}
+.toast{position:absolute;left:16px;right:16px;bottom:96px;background:var(--ink);color:var(--white);padding:12px 16px;border-radius:12px;font-size:13px;z-index:30;text-align:center}
+.bubble{padding:10px 12px;max-width:80%;font-size:14px;line-height:1.45}
+.me{align-self:flex-end;background:var(--indigo);color:var(--white);border-radius:16px 16px 4px 16px}
+.them{align-self:flex-start;background:var(--white);border:1px solid var(--line);border-radius:16px 16px 16px 4px}
+.splash{flex:1;background:var(--indigo);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:var(--white);cursor:pointer;border:0;width:100%;font-family:inherit}
+@media (prefers-reduced-motion: no-preference){
+  .spin{animation:spin 2.4s linear infinite;transform-origin:50% 50%}
+  @keyframes spin{to{transform:rotate(360deg)}}
+}
+</style>
+
+<div class="stage">
+  <p class="hint">Clickable prototype of the <b>user app</b>. Nothing is validated: any mobile number and any OTP work. All names, prices and chart values are sample data.</p>
+  <div class="phone" id="phone" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+const $phone = document.getElementById('phone');
+const ICON = {
+  back:'M15 18l-6-6 6-6', next:'M9 6l6 6-6 6',
+  home:'M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z',
+  search:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5',
+  chat:'M4 5h16v11H9l-5 4z',
+  user:'M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 21c0-4.4 3.6-7 8-7s8 2.6 8 7',
+  chart:'M4 4h16v16H4zM4 4l16 16M20 4L4 20M12 4l8 8-8 8-8-8z',
+  cal:'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+  sun:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8',
+  orbit:'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zM2 12c0-2 4.5-3.6 10-3.6S22 10 22 12s-4.5 3.6-10 3.6S2 14 2 12',
+  heart:'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z',
+  bag:'M4 8h16v11H4zM9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2',
+  rupee:'M7 5h10M7 9.5h10M10 5c3.5 0 5 2 5 4.5S13.5 14 10 14H7l7 6',
+  pulse:'M3 12h4l2.5-5 4 10 2.5-5H21',
+  grid:'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  bars:'M5 20V10M10 20V4M15 20v-7M20 20v-11',
+  link:'M9 15l6-6M8 11l-2 2a3 3 0 0 0 4 4l2-2M16 13l2-2a3 3 0 0 0-4-4l-2 2',
+  shield:'M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z',
+  time:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
+  doc:'M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6',
+  edit:'M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4',
+  family:'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21c0-3.9 3.1-6 7-6s7 2.1 7 6M16 3.5a4 4 0 0 1 0 7.5M22 21c0-3-1.8-5-4.5-5.7',
+  card:'M4 6h16v12H4zM4 10h16M8 15h3',
+  help:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17v.01',
+  trash:'M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13',
+  lock:'M5 10.5h14v10H5zM8 10.5V7.5a4 4 0 0 1 8 0v3',
+  download:'M12 4v11M7 10l5 5 5-5M5 20h14',
+  send:'M4 12l16-8-6 16-2.5-6.5z',
+  check:'M5 12l5 5 9-10',
+  info:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7.5v5.5M12 16.5v.01',
+  pin:'M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',
+  sort:'M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3',
+  camera:'M4 8h3l2-3h6l2 3h3v11H4zM12 9.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z',
+  plus:'M12 5v14M5 12h14', x:'M6 6l12 12M18 6 6 18', copy:'M8 8h12v12H8zM4 16V4h12'
+};
+const ic = (n, s=22, extra='') => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${extra}><path d="${ICON[n]}"></path></svg>`;
+const star = (fill='#E8A317', s=14) => `<svg aria-hidden="true" width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z" fill="${fill}"></path></svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = n => n.replace(/^(Acharya|Dr\.|Pt\.)\s+/,'').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const TINTS = [['#FDE8EC','#8E1B3B'],['#E7EEFD','#1F3A8A'],['#E3F5EC','#155C39'],['#FDF3DE','#6E4100']];
+const av = (name, size, i=0) => `<span class="av" aria-hidden="true" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.32)}px;background:${TINTS[i%4][0]};color:${TINTS[i%4][1]}">${initials(name)}</span>`;
+
+/* ---------- sample data ---------- */
+const ASTRO = [
+  {id:'rs', name:'Acharya Raghav Sharma', role:'Vedic astrologer', exp:14, langs:'Hindi, English', rating:4.8, consults:2340, price:15, exps:['Career','Marriage','Compatibility','Finance'], loc:'Jaipur, Rajasthan', degree:'M.A. Jyotish, BHU', hours:'10:00 AM – 7:00 PM', bio:'Trained in classical Parashari Jyotish in Varanasi. I help people make sense of career turns, marriage timing and family matters through their birth chart and dasha periods.'},
+  {id:'mi', name:'Dr. Meera Iyer', role:'KP & Nadi', exp:11, langs:'Tamil, English, Hindi', rating:4.9, consults:1860, price:25, exps:['Marriage','Compatibility','Health'], loc:'Chennai, Tamil Nadu', degree:'Ph.D. Jyotish', hours:'9:00 AM – 5:00 PM', bio:'KP and Nadi astrologer focused on marriage and relationship questions. Clear answers with exact timing where the chart allows.'},
+  {id:'aj', name:'Pt. Arvind Joshi', role:'Prashna & Muhurta', exp:22, langs:'Hindi, Marathi', rating:4.6, consults:3120, price:20, exps:['Career','Finance'], loc:'Pune, Maharashtra', degree:'Jyotish Acharya', hours:'8:00 AM – 2:00 PM', bio:'Prashna and muhurta specialist. Ask about the right time for a move, griha pravesh or a new venture.'},
+  {id:'sk', name:'Shalini Kapoor', role:'Vedic & Lal Kitab', exp:8, langs:'Hindi, Punjabi, English', rating:4.5, consults:980, price:12, exps:['Marriage','Health'], loc:'Chandigarh', degree:'Jyotish Visharad', hours:'11:00 AM – 8:00 PM', bio:'Vedic astrology with simple Lal Kitab remedies for everyday problems.'},
+  {id:'dm', name:'Acharya Dev Mishra', role:'Vedic astrologer', exp:17, langs:'Hindi, Bhojpuri', rating:4.7, consults:2050, price:18, exps:['Career','Compatibility','Finance'], loc:'Varanasi, Uttar Pradesh', degree:'Shastri, Sampurnanand Univ.', hours:'10:00 AM – 6:00 PM', bio:'Seventeen years of practice in Varanasi. Patient explanations of your chart in plain language.'}
+];
+const REVIEWS = [
+  {name:'Priya S.', stars:5, text:'Explained my dasha period clearly and gave practical advice on my job change.', date:'2 Nov 2026'},
+  {name:'Karan M.', stars:5, text:'Kundli matching for our families was thorough and easy to understand.', date:'28 Oct 2026'},
+  {name:'Neha R.', stars:4, text:'Helpful session. Would have liked a little more time on remedies.', date:'19 Oct 2026'}
+];
+const REPORTS = [
+  {id:'career', title:'Career report 2027', desc:'24 pages · job, business & timing', price:499, icon:'bag', tint:['#E7EEFD','#1F3A8A']},
+  {id:'year', title:'Yearly horoscope 2027', desc:'18 pages · month by month', price:299, icon:'cal', tint:['#FDF3DE','#8A5300']},
+  {id:'love', title:'Love & marriage report', desc:'20 pages · compatibility & timing', price:399, icon:'heart', tint:['#FDE8EC','#8E1B3B']},
+  {id:'money', title:'Finance & wealth report', desc:'16 pages · income & investments', price:449, icon:'rupee', tint:['#E3F5EC','#155C39']},
+  {id:'health', title:'Health outlook report', desc:'14 pages · wellbeing periods', price:349, icon:'pulse', tint:['#EDEAF7','#1E1B4B']}
+];
+const PLACES = [['Jaipur','Rajasthan'],['Jaisalmer','Rajasthan'],['Jaigaon','West Bengal'],['Jaitaran','Rajasthan'],['Jaisinghpur','Uttar Pradesh'],['Kota','Rajasthan'],['Ajmer','Rajasthan'],['Pune','Maharashtra'],['Mumbai','Maharashtra'],['Delhi','Delhi'],['Bengaluru','Karnataka'],['Chennai','Tamil Nadu'],['Kolkata','West Bengal'],['Lucknow','Uttar Pradesh'],['Udaipur','Rajasthan'],['Varanasi','Uttar Pradesh'],['Hyderabad','Telangana'],['Ahmedabad','Gujarat'],['Bhopal','Madhya Pradesh'],['Chandigarh','Punjab']];
+const KTABS = ['Overview','D1 · Lagna','D9 · Navamsha','Moon chart','Chalit chart','Planets','Dasha','Birth details','Panchang','Ashtakvarga','Karakamsha','Swamsha','Shadbala','Friendship','Person details','Ghatak & favourable'];
+
+/* ---------- state ---------- */
+const S = {
+  stack: ['splash'],
+  guest: true, user: {name:'', phone:'', dob:''}, pendingPhone:'', otpFor:'login', newUser:true,
+  consent: true, dues: null, // {astro, mins, amount}
+  astroFilter:'All', astroSort:'rating', astroQuery:'', astroId:'rs',
+  chat: [], chatAstro:'rs', chatStart:0, blockedFlash:false,
+  rating:5,
+  history: [
+    {astro:'mi', date:'12 Nov', mins:9, amount:225, paid:true, rated:false, last:'Your 7th lord is strong; marriage timing looks good after June.'},
+    {astro:'aj', date:'30 Oct', mins:15, amount:300, paid:true, rated:true, last:'For the griha pravesh, 14 Dec morning is good.'}
+  ],
+  tx: [
+    {title:'Dr. Meera Iyer', sub:'12 Nov · 9 min chat', amount:225, kind:'c', month:'November 2026'},
+    {title:'Yearly horoscope 2027', sub:'28 Oct · report', amount:299, kind:'r', month:'October 2026'},
+    {title:'Pt. Arvind Joshi', sub:'30 Oct · 15 min chat', amount:300, kind:'c', month:'October 2026'}
+  ],
+  txFilter:'All',
+  myReports:[{id:'year', for:'Self', ready:true, date:'28 Oct'}], reportsTab:'Store', reportId:'career', reportFor:0,
+  profiles:[
+    {name:'Rohit Verma', rel:'Brother', dob:'02 Mar 1992', time:'11:15 PM', place:'Kota'},
+    {name:'Sunita Verma', rel:'Mother', dob:'21 Jan 1968', time:'04:30 AM', place:'Ajmer'}
+  ],
+  activeProfile:0,
+  kform:{name:'', gender:'Female', dob:'1996-08-14', time:'06:40', place:''},
+  placeQuery:'',
+  kTab:'Overview', dasha:'Vimshottari', horoPeriod:'Daily', horoSign:4,
+  delOk:false, toast:'', sheet:null
+};
+const me = () => S.user.name || 'Guest';
+const selfProfile = () => ({name: S.user.name || 'You', rel:'Self', dob: fmtDate(S.kform.dob) || '14 Aug 1996', time: fmtTime(S.kform.time) || '06:40 AM', place: S.kform.place || 'Jaipur'});
+const allProfiles = () => [selfProfile(), ...S.profiles];
+const kp = () => allProfiles()[S.activeProfile] || selfProfile();
+function fmtDate(v){ if(!v) return ''; const d=new Date(v+'T00:00'); if(isNaN(d)) return v; return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtTime(v){ if(!v) return ''; const [h,m]=v.split(':').map(Number); if(isNaN(h)) return v; const ap=h>=12?'PM':'AM'; const hh=((h+11)%12)+1; return String(hh).padStart(2,'0')+':'+String(m).padStart(2,'0')+' '+ap; }
+function age(v){ const d=new Date(v+'T00:00'); if(isNaN(d)) return ''; const n=new Date('2026-11-18'); let a=n.getFullYear()-d.getFullYear(); if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate())) a--; return a>=0&&a<130? a+' yrs':''; }
+
+/* ---------- navigation ---------- */
+const cur = () => S.stack[S.stack.length-1];
+function go(name, replace){ if(replace) S.stack[S.stack.length-1]=name; else S.stack.push(name); S.sheet=null; render(true); }
+function back(){ if(S.stack.length>1) S.stack.pop(); else S.stack=['home']; S.sheet=null; render(true); }
+function tabRoot(name){ S.stack=[name]; S.sheet=null; render(true); }
+function toast(msg){ S.toast=msg; render(); clearTimeout(toast.t); toast.t=setTimeout(()=>{S.toast=''; render();},2200); }
+const ROUTES = new Set();
+window.addEventListener('hashchange', ()=>{ const h=location.hash.slice(1); if(h && ROUTES.has(h) && h!==cur()){ S.stack.push(h); render(true);} });
+
+/* ---------- shared pieces ---------- */
+const topbar = (title, opts={}) => `<div class="topbar">${opts.noBack?'':`<button class="iconbtn" data-act="back" aria-label="Back">${ic('back',24)}</button>`}${title?`<h1 class="title">${esc(title)}</h1>`:''}<span class="grow"></span>${opts.right||''}</div>`;
+const NAVT = [['Home','home','home'],['Astrologers','astrologers','search'],['Chats','chats','chat'],['Profile','profile','user']];
+const nav = active => `<nav class="nav" aria-label="Main">${NAVT.map(([l,r,i])=>`<button data-tab="${r}" class="${r===active?'on':''}" ${r===active?'aria-current="page"':''}><span class="pill">${ic(i,24)}</span>${l}</button>`).join('')}</nav>`;
+const kundliHeader = () => { const p=kp(); return `<header class="hdr"><div class="topbar"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back',24)}</button><span style="flex:1;font-size:15px;font-weight:600">Kundli</span><button class="btn gold sm" style="height:36px;border-radius:18px;font-size:13px;padding:0 12px" data-act="toast" data-msg="Kundli PDF downloaded (prototype)">${ic('download',16)}Download PDF</button></div><h1 class="disp" style="font-size:26px">${esc(p.name)}</h1><p class="sub">${esc(S.kform.gender)} · ${esc(p.dob)} · ${esc(p.time)} · ${esc(p.place)}</p></header>`; };
+const kundliTabs = () => `<nav class="tabs" aria-label="Kundli sections"><div class="hscroll" id="ktabs">${S.kTab!=='Overview'?`<button class="tab all" data-ktab="Overview" aria-label="All Kundli sections">${ic('grid',16)}All</button>`:''}${KTABS.map(t=>`<button class="tab ${t===S.kTab?'on':''}" data-ktab="${esc(t)}" ${t===S.kTab?'aria-current="page"':''}>${esc(t)}</button>`).join('')}</div></nav>`;
+
+/* ---------- screens ---------- */
+const SCREENS = {
+splash(){ return `<button class="splash" data-go="login" aria-label="Open the app">
+  <svg aria-hidden="true" width="104" height="104" viewBox="0 0 104 104"><circle cx="52" cy="52" r="50" fill="#2A2763" stroke="#F2B544" stroke-width="1.5"></circle><path d="M60 26a28 28 0 1 0 18 46 24 24 0 1 1-18-46z" fill="#F2B544"></path><path class="spin" d="M68 30l2.4 5.6 5.6 2.4-5.6 2.4L68 46l-2.4-5.6-5.6-2.4 5.6-2.4z" fill="#fff" style="transform-origin:68px 38px"></path></svg>
+  <span class="disp" style="font-size:44px;letter-spacing:6px;color:var(--gold)">ASTRO</span>
+  <span style="font-size:15px;color:var(--soft)">Kundli · Horoscope · Expert astrologers</span>
+  <span style="font-size:12px;color:var(--soft);margin-top:40px">Tap to continue</span></button>`; },
+
+login(){ return `<div class="scr"><div class="topbar"><span class="grow"></span><button class="link" data-act="skip" style="padding:12px 8px">Skip</button></div><div class="pad grow" style="padding:8px 24px 28px">
+  <svg aria-hidden="true" width="150" height="150" viewBox="0 0 200 200" style="align-self:center"><circle cx="100" cy="100" r="96" fill="#F6F4FA"></circle><circle cx="100" cy="100" r="84" fill="none" stroke="#1E1B4B" stroke-width="1.2"></circle><circle cx="100" cy="100" r="62" fill="none" stroke="#1E1B4B" stroke-width="1.2"></circle><circle cx="100" cy="100" r="34" fill="#1E1B4B"></circle><path d="M106 80a20 20 0 1 0 13 33 17 17 0 1 1-13-33z" fill="#F2B544"></path></svg>
+  <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h1">Enter your mobile number</h1><p class="lead">We’ll send a 6-digit OTP by SMS to verify it.</p></div>
+  <div class="field"><label for="phone">Mobile number</label><div class="row"><span class="prefix">+91</span><input class="input" id="phone" type="tel" inputmode="numeric" placeholder="98765 43210" data-model="pendingPhone" value="${esc(S.pendingPhone)}"></div></div>
+  <span class="grow"></span>
+  <button class="btn" data-act="getotp">Get OTP</button>
+  <button class="btn ghost" data-go="astroLogin">Login as an astrologer</button>
+</div></div>`; },
+
+astroLogin(){ return `<div class="scr">${topbar('')}<div class="pad grow" style="padding:8px 24px 28px">
+  <h1 class="h1">Astrologer app</h1><p class="lead">This prototype covers the user side only. The astrologer screens are on the design canvas.</p><span class="grow"></span><button class="btn" data-act="back">Back to user login</button></div></div>`; },
+
+otp(){ const num = S.otpFor==='change' ? S.pendingPhone : S.pendingPhone; return `<div class="scr">${topbar('')}<div class="pad grow" style="padding:8px 24px 28px">
+  <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h1">Verify your number</h1><p class="lead">Enter the 6-digit OTP sent to<br><b style="color:var(--ink)">+91 ${esc(num||'98765 43210')}</b> · <button class="link" data-act="back" style="padding:0">Change</button></p></div>
+  <div class="otp" role="group" aria-label="One-time password">${[1,2,3,4,5,6].map(i=>`<input id="otp${i}" inputmode="numeric" maxlength="1" aria-label="Digit ${i}" data-otp="${i}">`).join('')}</div>
+  <p class="small muted">Any code works in this prototype. Didn’t get it? <button class="link" data-act="toast" data-msg="OTP sent again">Resend OTP</button></p>
+  <span class="grow"></span><button class="btn" data-act="verify">Verify</button></div></div>`; },
+
+consent(){ return `<div class="scr"><div class="pad grow" style="padding:20px 24px 28px">
+  <span aria-hidden="true" style="width:56px;height:56px;border-radius:18px;background:var(--mist);display:flex;align-items:center;justify-content:center;color:var(--indigo)">${ic('shield',30)}</span>
+  <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h1">Before we save your details</h1><p class="lead">Under India’s Digital Personal Data Protection (DPDP) Act, we need your consent to store your personal details.</p></div>
+  <section class="card cardpad" style="background:var(--mist);border:0;display:flex;flex-direction:column;gap:10px"><h2 class="h3">What we store</h2>
+  ${[['Account','mobile number, name, profile picture, date of birth'],['Birth profiles','date, time and place of birth you enter for Kundli'],['Consultations','chat history with astrologers and your reviews'],['Payments','transactions and invoices']].map(([t,d])=>`<div class="row" style="align-items:flex-start;font-size:13px;line-height:1.45"><span style="color:var(--good)">${ic('check',18)}</span><span><b>${t}</b> — ${d}</span></div>`).join('')}</section>
+  <span class="grow"></span>
+  <label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45;cursor:pointer"><input type="checkbox" id="agree" data-check="consent" ${S.consent?'checked':''} style="width:22px;height:22px;margin:0;accent-color:var(--indigo)"><span>I agree to the storage of my personal details as described.</span></label>
+  <button class="btn" data-go-replace="newUser">Agree &amp; continue</button></div></div>`; },
+
+newUser(){ const a = age(S.user.dob); return `<div class="scr"><div class="pad grow" style="padding:20px 24px 28px">
+  <div style="display:flex;flex-direction:column;gap:8px"><h1 class="h1">Tell us about you</h1><p class="lead">Only your name is needed. You can add the rest later.</p></div>
+  <button class="av" style="align-self:center;width:96px;height:96px;border:1.5px dashed #B9B3D6;background:var(--mist);color:var(--muted);cursor:pointer" data-act="toast" data-msg="Photo picker opens here" aria-label="Add profile picture">${ic('camera',30)}</button>
+  <div class="field"><label for="uname">Name</label><input class="input" id="uname" data-model="user.name" value="${esc(S.user.name)}" placeholder="Your full name"></div>
+  <div class="field"><label for="udob">Date of birth <span class="muted" style="font-weight:400">(optional)</span></label><div class="row"><input class="input" id="udob" type="date" data-model="user.dob" data-rerender="1" value="${esc(S.user.dob)}">${a?`<span class="badge b-warn" style="height:52px;padding:0 14px;border-radius:12px;font-size:14px">${a}</span>`:''}</div></div>
+  <span class="grow"></span><button class="btn" data-act="finishOnboarding">Continue</button></div></div>`; },
+
+home(){ const tools=[['Generate Kundli','kundli','chart'],['Panchang','panchang','cal'],['Horoscope','horoscope','sun'],['Planetary details','planetsQuick','orbit']];
+  const services=[['Compatibility','Kundli matching','heart','#FDE8EC','#B4234A','Marriage'],['Career & marriage','Timing & guidance','bag','#E7EEFD','#2747A8','Career'],['Finance','Wealth & money','rupee','#FDF3DE','#8A5300','Finance'],['Health','Wellbeing outlook','pulse','#E3F5EC','#1D7046','Health']];
+  return `<div class="scr mist"><header class="hdr" style="padding:18px 20px 24px;border-radius:0 0 28px 28px;gap:20px">
+  <div class="row" style="gap:12px">${S.guest?`<span class="av" style="width:44px;height:44px;background:var(--indigo2);color:var(--gold)">${ic('user',22)}</span>`:`<span class="av" style="width:44px;height:44px;background:var(--gold);color:var(--indigo);font-size:16px">${initials(me())}</span>`}<div style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="sub">Namaste,</span><span class="disp" style="font-size:22px">${esc(me())}</span></div>${S.guest?`<button class="btn gold sm" style="height:36px;font-size:13px" data-go="login">Log in</button>`:''}</div>
+  <nav aria-label="Quick tools" class="grid2" style="gap:12px">${tools.map(([l,r,i])=>`<button data-go="${r}" style="min-height:120px;background:var(--indigo2);border:1px solid var(--indigo3);border-radius:20px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;color:#fff;cursor:pointer;text-align:left"><span style="width:52px;height:52px;border-radius:16px;background:var(--indigo);display:flex;align-items:center;justify-content:center;color:var(--gold)">${ic(i,28)}</span><span style="font-size:16px;font-weight:700">${l}</span></button>`).join('')}</nav></header>
+  ${S.dues?`<div style="padding:16px 20px 0"><button class="note" style="border:0;width:100%;text-align:left;cursor:pointer" data-go="summary">${ic('info',20)}<span style="flex:1"><b>₹${S.dues.amount} unpaid</b> for your session with ${esc(S.dues.name)}. Tap to pay.</span></button></div>`:''}
+  <section class="pad" style="padding-bottom:0;gap:12px"><h2 class="h2">Astrology services</h2><div class="grid2" style="gap:12px">${services.map(([t,s,i,bg,fg,f])=>`<button class="card" data-act="service" data-filter="${f}" style="padding:14px;display:flex;flex-direction:column;gap:12px;text-align:left;cursor:pointer;color:var(--ink)"><span style="width:40px;height:40px;border-radius:12px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center">${ic(i,22)}</span><span style="display:flex;flex-direction:column;gap:2px"><b style="font-size:15px">${t}</b><span class="small muted">${s}</span></span></button>`).join('')}</div></section>
+  <section style="padding:24px 0 20px;display:flex;flex-direction:column;gap:12px"><div class="row" style="padding:0 20px;justify-content:space-between"><h2 class="h2">Connect with astrologers</h2><button class="link" data-tab="astrologers">See all</button></div>
+  <div class="hscroll" style="gap:10px">${ASTRO.map((a,i)=>`<article class="card" style="flex:0 0 144px;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px"><button data-astro="${a.id}" style="border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:var(--ink);padding:0">${av(a.name,52,i)}<b style="font-size:13px;line-height:1.3">${esc(a.name)}</b><span class="small muted" style="font-size:11px">${esc(a.role)}</span></button><span class="small muted row" style="gap:4px;font-size:11px">${star('#E8A317',12)}<b style="color:var(--ink)">${a.rating}</b> · ${a.consults.toLocaleString('en-IN')}</span><button class="btn sm" style="width:100%;height:44px;font-size:13px" data-consult="${a.id}">${ic('chat',16,'style="color:var(--gold)"')}Chat</button></article>`).join('')}</div></section>
+</div>${nav('home')}`; },
+
+astrologers(){ let list = ASTRO.filter(a => (S.astroFilter==='All' || a.exps.includes(S.astroFilter)) && a.name.toLowerCase().includes(S.astroQuery.toLowerCase()));
+  const sorts={rating:(a,b)=>b.rating-a.rating, exp:(a,b)=>b.exp-a.exp, expAsc:(a,b)=>a.exp-b.exp, az:(a,b)=>a.name.localeCompare(b.name), za:(a,b)=>b.name.localeCompare(a.name), ratingAsc:(a,b)=>a.rating-b.rating};
+  list = list.slice().sort(sorts[S.astroSort]);
+  const sortLabel={rating:'Rating ↓',ratingAsc:'Rating ↑',exp:'Experience ↓',expAsc:'Experience ↑',az:'Name A–Z',za:'Name Z–A'}[S.astroSort];
+  return `<div class="scr mist"><div class="pad" style="padding:20px 20px 4px;gap:14px"><h1 class="h1">Find astrologers</h1>
+  <div class="row"><label class="input row" style="height:48px;gap:8px;padding:0 14px;flex:1"><span class="muted">${ic('search',20)}</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search by name</span><input id="asearch" type="search" placeholder="Search by name" data-model="astroQuery" data-rerender="1" value="${esc(S.astroQuery)}" style="border:0;outline:none;flex:1;min-width:0;font-size:15px;font-weight:500;background:none;color:var(--ink)"></label><button class="chip" style="height:48px;border-radius:14px;display:flex;align-items:center;gap:6px" data-act="sortsheet">${ic('sort',18)}Sort</button></div>
+  <span class="small muted">Sorted by ${sortLabel}</span></div>
+  <div class="hscroll" role="tablist" aria-label="Expertise" style="padding-bottom:12px">${['All','Compatibility','Career','Marriage','Finance','Health'].map(l=>`<button class="chip ${l===S.astroFilter?'on':''}" role="tab" aria-selected="${l===S.astroFilter}" data-filter-chip="${l}">${l}</button>`).join('')}</div>
+  <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:12px">${list.length?list.map(a=>`<button class="card" data-astro="${a.id}" style="padding:16px;display:flex;flex-direction:column;gap:12px;text-align:left;cursor:pointer;color:var(--ink)"><span class="row" style="gap:14px;align-items:flex-start;width:100%">${av(a.name,60,ASTRO.indexOf(a))}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><b style="font-size:16px">${esc(a.name)}</b><span style="font-size:13px" class="muted">${esc(a.role)} · ${a.exp} yrs</span><span class="small muted">${esc(a.langs)}</span><span class="small muted row" style="gap:6px">${star()}<b style="color:var(--ink)">${a.rating}</b>/5 · ${a.consults.toLocaleString('en-IN')} consultations</span></span></span><span style="border-top:1px solid var(--line2);padding-top:10px;width:100%;font-weight:700;font-size:15px">₹${a.price}<span class="small muted" style="font-weight:500">/min</span></span></button>`).join(''):`<p class="lead" style="text-align:center;padding:30px 0">No astrologers match “${esc(S.astroQuery)}”.</p>`}</div></div>${nav('astrologers')}`; },
+
+astroProfile(){ const a = ASTRO.find(x=>x.id===S.astroId); const i=ASTRO.indexOf(a); return `<div class="scr mist"><header class="hdr" style="align-items:center;text-align:center;border-radius:0 0 28px 28px;gap:8px"><div class="topbar" style="align-self:stretch"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back',24)}</button></div>
+  <span class="av" aria-hidden="true" style="width:100px;height:100px;font-size:32px;background:${TINTS[i%4][0]};color:${TINTS[i%4][1]};border:3px solid var(--gold)">${initials(a.name)}</span><h1 class="disp" style="font-size:26px">${esc(a.name)}</h1><p class="sub">${esc(a.role)}</p><div class="row" style="gap:3px" role="img" aria-label="Rated ${a.rating} out of 5">${[1,2,3,4,5].map(n=>star(n<=Math.round(a.rating)?'#F2B544':'#4A4690',16)).join('')}<b style="margin-left:6px">${a.rating}</b></div>
+  <div style="align-self:stretch;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px">${[[a.exp+' yrs','Experience'],[a.consults.toLocaleString('en-IN'),'Consultations'],['412','Reviews']].map(([v,k])=>`<div style="background:var(--indigo2);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;gap:2px"><b style="font-size:17px">${v}</b><span class="small" style="color:var(--soft)">${k}</span></div>`).join('')}</div></header>
+  <div class="pad" style="gap:20px"><section style="display:flex;flex-direction:column;gap:8px"><h2 class="h2">About</h2><p style="font-size:14px;line-height:1.6;color:#3E3A5E">${esc(a.bio)}</p></section>
+  <section class="card" style="padding:4px 16px">${[['Languages',a.langs],['Location',a.loc],['Working hours',a.hours],['Degree',a.degree],['Expertise',a.exps.join(', ')]].map(([k,v],j)=>`<div class="row" style="justify-content:space-between;padding:12px 0;${j?'border-top:1px solid var(--line2);':''}font-size:14px"><span class="muted small">${k}</span><b style="text-align:right">${esc(v)}</b></div>`).join('')}</section>
+  <section style="display:flex;flex-direction:column;gap:10px"><h2 class="h2">Reviews</h2>${REVIEWS.map(r=>`<article class="card cardpad" style="display:flex;flex-direction:column;gap:6px"><div class="row" style="justify-content:space-between"><b>${esc(r.name)}</b><span class="row small" style="gap:4px;font-weight:700">${star()}${r.stars}/5</span></div><p style="font-size:13px;line-height:1.55;color:#3E3A5E">${esc(r.text)}</p><span class="small muted">${r.date}</span></article>`).join('')}</section></div></div>
+  <div class="row" style="background:var(--white);border-top:1px solid var(--line);padding:12px 20px calc(16px + env(safe-area-inset-bottom,0px));gap:16px;flex:0 0 auto"><div style="display:flex;flex-direction:column"><span class="small muted">Consultation</span><b style="font-size:18px">₹${a.price}<span class="small muted" style="font-weight:500">/min</span></b></div><button class="btn" style="flex:1" data-consult="${a.id}">${ic('chat',20,'style="color:var(--gold)"')}Chat now</button></div>`; },
+
+waiting(){ const a = ASTRO.find(x=>x.id===S.chatAstro); return `<div class="scr dark"><div class="pad grow" style="align-items:center;text-align:center;padding:60px 24px 28px;gap:20px">
+  <div style="position:relative;width:180px;height:180px;display:flex;align-items:center;justify-content:center"><svg aria-hidden="true" width="180" height="180" viewBox="0 0 200 200" style="position:absolute;inset:0"><circle cx="100" cy="100" r="94" fill="none" stroke="#2D2A66" stroke-width="4"></circle><circle class="spin" cx="100" cy="100" r="94" fill="none" stroke="#F2B544" stroke-width="4" stroke-linecap="round" stroke-dasharray="140 460" style="transform-origin:100px 100px"></circle></svg>${av(a.name,120,ASTRO.indexOf(a))}</div>
+  <h1 class="h1" style="font-size:24px">Waiting for ${esc(a.name)} to accept</h1><p style="font-size:14px;line-height:1.55;color:var(--soft)">Your chat request has been sent. The chat opens as soon as they accept.</p>
+  <div style="align-self:stretch;background:var(--indigo2);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;text-align:left;font-size:13px"><div class="row" style="justify-content:space-between"><span style="color:var(--soft)">Charge</span><b>₹${a.price} / min</b></div><div class="row" style="justify-content:space-between"><span style="color:var(--soft)">You pay</span><b>After the session ends</b></div></div>
+  <span class="grow"></span><button class="btn" style="background:none;border:1.5px solid #4A4690" data-act="back">Cancel request</button></div></div>`; },
+
+chat(){ const a = ASTRO.find(x=>x.id===S.chatAstro); const mins = Math.max(1, Math.round((Date.now()-S.chatStart)/60000)); return `<header class="row" style="background:var(--indigo);color:#fff;padding:10px 14px;gap:10px;flex:0 0 auto">${av(a.name,42,ASTRO.indexOf(a))}<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</b><span class="small num" style="color:var(--gold)">● Live · ₹${a.price}/min · text only</span></div><button class="btn danger sm" style="height:38px;border-radius:19px;font-size:13px" data-act="endchat">End</button></header>
+  <div class="scr mist" id="chatlog" style="padding:14px;gap:10px"><span class="small muted" style="align-self:center;background:#EDEAF7;padding:4px 12px;border-radius:12px">Session started · text only</span>
+  ${S.chat.map(m=> m.blocked ? `<div role="alert" class="note bad" style="align-self:flex-end;max-width:88%">${ic('info',16)}<span>Message not sent. Sharing phone numbers, emails, links or offensive words isn’t allowed.</span></div>` : `<div class="bubble ${m.me?'me':'them'}">${esc(m.text)}</div>`).join('')}</div>
+  <form class="row" id="chatform" style="background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(14px + env(safe-area-inset-bottom,0px));gap:8px;flex:0 0 auto"><label for="msg" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Message</label><input id="msg" class="input" autocomplete="off" placeholder="Type your question…" style="height:48px;border-radius:24px;background:var(--mist)"><button class="iconbtn" type="submit" aria-label="Send" style="background:var(--indigo);color:var(--gold);width:48px;height:48px;flex:0 0 48px">${ic('send',20)}</button></form>`; },
+
+summary(){ const d = S.dues || {name:'Acharya Raghav Sharma', mins:12, rate:15, amount:180}; return `<div class="scr mist"><div class="pad grow" style="padding:40px 20px 24px">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">${av(d.name,80,ASTRO.findIndex(x=>x.name===d.name))}<h1 class="h1" style="font-size:26px">Session ended</h1><p class="lead">with ${esc(d.name)}</p></div>
+  <section class="card" style="padding:4px 16px"><h2 class="h3" style="margin:12px 0 4px">Fee summary</h2>${[['Duration',d.mins+' min'],['Rate','₹'+d.rate+' / min'],['Gateway charges','[TBD]']].map(([k,v])=>`<div class="row" style="justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line2)"><span class="muted">${k}</span><b>${v}</b></div>`).join('')}<div class="row" style="justify-content:space-between;padding:14px 0;font-size:17px"><b>Total</b><b>₹${d.amount}</b></div></section>
+  <div class="note" role="note">${ic('info',18)}<span>Payments are non-refundable. Until this is paid you can’t book another session.</span></div>
+  <span class="grow"></span><button class="btn" data-act="pay">${ic('lock',18,'style="color:var(--gold)"')}Pay ₹${d.amount} securely</button><span class="small muted" style="text-align:center">UPI, cards, net banking and wallets via the payment gateway</span><button class="btn ghost" data-act="paylater">Pay later</button></div></div>`; },
+
+rate(){ const words=['','Poor','Fair','Good','Very good','Excellent']; return `<div class="scr mist"><div class="pad grow" style="padding:36px 20px 24px">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center"><span class="av" style="width:72px;height:72px;background:var(--good-bg);color:var(--good)">${ic('check',36)}</span><h1 class="h1" style="font-size:26px">Payment successful</h1><p class="lead">₹${S.lastPaid?.amount||180} paid</p><button class="chip row" style="gap:6px" data-act="toast" data-msg="Invoice downloaded (prototype)">${ic('download',16)}Download invoice</button></div>
+  <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px"><div><h2 class="h3" style="font-size:17px">Rate your session</h2><span class="small muted">with ${esc(S.lastPaid?.name||'')}</span></div>
+  <div class="row" role="radiogroup" aria-label="Rating out of 5" style="gap:4px">${[1,2,3,4,5].map(n=>`<button class="iconbtn" role="radio" aria-checked="${n===S.rating}" aria-label="${n} star${n>1?'s':''}" data-rate="${n}" style="width:48px;height:48px">${star(n<=S.rating?'#E8A317':'#E6E2F0',36)}</button>`).join('')}</div><b>${S.rating} / 5 · ${words[S.rating]}</b>
+  <div class="field"><label for="review">Review <span class="muted" style="font-weight:400">(optional)</span></label><textarea class="input" id="review" rows="3" placeholder="What was helpful?"></textarea><span class="small muted">Reviews with offensive words can’t be posted.</span></div></section>
+  <span class="grow"></span><button class="btn" data-act="submitreview">Submit review</button><button class="btn ghost" data-act="skiprate">Skip</button></div></div>`; },
+
+chats(){ const items = S.history; return `<div class="scr mist"><div class="pad" style="padding-top:20px"><h1 class="h1">Chats</h1>
+  ${S.guest?`<div class="card cardpad" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start"><p class="lead">Log in to see your past consultations.</p><button class="btn sm" data-go="login">Log in</button></div>`:''}
+  ${S.dues?`<button class="note" style="border:0;text-align:left;cursor:pointer" data-go="summary">${ic('info',20)}<span style="flex:1"><b>₹${S.dues.amount} unpaid</b> for your session with ${esc(S.dues.name)}. Pay to book again.</span><b>Pay</b></button>`:''}
+  ${!S.guest? (items.length? items.map(h=>{ const a=ASTRO.find(x=>x.id===h.astro); return `<button class="card" data-pastchat="${S.history.indexOf(h)}" style="padding:14px;display:flex;gap:12px;text-align:left;cursor:pointer;color:var(--ink)">${av(a.name,48,ASTRO.indexOf(a))}<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span class="row" style="justify-content:space-between"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.name)}</b><span class="small muted">${h.date}</span></span><span class="small muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(h.last)}</span><span class="row small" style="gap:8px"><span class="muted">${h.mins} min · ₹${h.amount}</span><span class="badge ${h.paid?'b-good':'b-warn'}">${h.paid?'Paid':'Due'}</span>${h.rated?'<span class="muted">★ Rated</span>':''}</span></span></button>`; }).join('') : `<p class="lead">No chats yet. Find an astrologer to start one.</p>`) : ''}
+</div></div>${nav('chats')}`; },
+
+pastChat(){ const h=S.history[S.pastIdx]; const a=ASTRO.find(x=>x.id===h.astro); return `<div class="scr mist">${topbar(a.name)}<div style="padding:8px 16px 20px;display:flex;flex-direction:column;gap:10px"><span class="small muted" style="align-self:center;background:#EDEAF7;padding:4px 12px;border-radius:12px">${h.date} · ${h.mins} min · read-only</span>${(h.msgs||[{me:true,text:'Namaste, I have a question about my chart.'},{me:false,text:'Namaste. Please go ahead.'},{me:false,text:h.last}]).map(m=>`<div class="bubble ${m.me?'me':'them'}">${esc(m.text)}</div>`).join('')}</div></div>`; },
+
+kundli(){ const f=S.kform; return `<div class="scr mist">${topbar('Generate Kundli')}<div class="pad" style="padding-top:4px">
+  <form class="card" id="kform" style="padding:20px 16px;display:flex;flex-direction:column;gap:16px">
+  <div class="field"><label for="kname">Name</label><input class="input" id="kname" placeholder="Full name" data-model="kform.name" value="${esc(f.name)}"></div>
+  <fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px"><legend class="lbl" style="padding:0;margin-bottom:8px">Gender</legend><div class="seg" role="radiogroup" style="grid-template-columns:1fr 1fr">${['Male','Female'].map(g=>`<button type="button" role="radio" aria-checked="${g===f.gender}" class="${g===f.gender?'on':''}" data-gender="${g}" style="height:44px">${g}</button>`).join('')}</div></fieldset>
+  <div class="grid2" style="gap:12px"><div class="field"><label for="kdob">Date of birth</label><input class="input" id="kdob" type="date" data-model="kform.dob" value="${esc(f.dob)}" style="padding:0 10px;font-size:15px"></div><div class="field"><label for="ktime">Birth time</label><input class="input" id="ktime" type="time" data-model="kform.time" value="${esc(f.time)}" style="padding:0 10px;font-size:15px"></div></div>
+  <div class="field"><span class="lbl">Birth place</span><button type="button" class="input row" data-go="place" style="gap:10px;text-align:left;cursor:pointer;color:${f.place?'var(--ink)':'#6F6B8C'};font-size:15px"><span class="muted">${ic('search',18)}</span>${esc(f.place||'Search city in India')}</button></div>
+  <button type="button" class="btn" data-act="proceedKundli">Proceed</button></form>
+  <section style="display:flex;flex-direction:column;gap:10px"><h2 class="h2">Saved Kundlis</h2>${allProfiles().map((p,i)=>`<button class="card" data-openprofile="${i}" style="padding:12px 14px;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;color:var(--ink)"><span class="av" style="width:44px;height:44px;background:#EDEAF7;color:var(--indigo)">${initials(p.name)}</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><b>${esc(p.name)}</b><span class="small muted">${esc(p.dob)} · ${esc(p.time)} · ${esc(p.place)}</span></span><span class="muted">${ic('next',20)}</span></button>`).join('')}</section></div></div>`; },
+
+place(){ const q=S.placeQuery.trim().toLowerCase(); const list = (q?PLACES.filter(([c])=>c.toLowerCase().startsWith(q)):PLACES).slice(0,8); return `<div class="scr">${topbar('Birth place')}<div class="pad" style="padding-top:4px;gap:12px">
+  <label class="input row" style="gap:10px;border-color:var(--indigo)"><span>${ic('search',20)}</span><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search city in India</span><input id="psearch" type="search" placeholder="Search city in India" data-model="placeQuery" data-rerender="1" value="${esc(S.placeQuery)}" style="border:0;outline:none;flex:1;min-width:0;font-size:16px;font-weight:500;background:none;color:var(--ink)"></label>
+  <p class="small muted">Places in India only.${q&&!list.length?' No match. Tap below to use what you typed.':''}</p>
+  <ul role="listbox" aria-label="Suggestions" style="list-style:none;margin:0;padding:0" class="list">${list.map(([c,s])=>`<li role="option" aria-selected="false"><button class="li" data-place="${esc(c)}, ${esc(s)}"><span class="av" style="width:40px;height:40px;background:var(--mist);color:var(--muted)">${ic('pin',18)}</span><span style="display:flex;flex-direction:column;gap:2px"><span><b>${esc(c.slice(0,q.length))}</b>${esc(c.slice(q.length))}</span><span class="small muted">${esc(s)}, India</span></span></button></li>`).join('')}${q&&!list.length?`<li><button class="li" data-place="${esc(S.placeQuery)}"><span class="av" style="width:40px;height:40px;background:var(--mist);color:var(--muted)">${ic('pin',18)}</span>Use “${esc(S.placeQuery)}”</button></li>`:''}</ul></div></div>`; },
+
+kundliView(){ return `<div class="scr mist">${kundliHeader()}${kundliTabs()}<div class="pad" style="padding-top:18px">${KVIEW[S.kTab] ? KVIEW[S.kTab]() : KVIEW._generic()}</div></div>`; },
+
+panchang(){ return `<div class="scr mist">${topbar('Panchang')}<div class="pad" style="padding-top:4px">${PANCHANG()}</div></div>`; },
+
+horoscope(){ const P={Daily:['Today','18 Nov 2026'],Weekly:['This week','16 – 22 Nov 2026'],Monthly:['This month','November 2026'],Yearly:['This year','2026']};
+  const SG=[['Aries','♈','21 Mar – 19 Apr'],['Taurus','♉','20 Apr – 20 May'],['Gemini','♊','21 May – 20 Jun'],['Cancer','♋','21 Jun – 22 Jul'],['Leo','♌','23 Jul – 22 Aug'],['Virgo','♍','23 Aug – 22 Sep'],['Libra','♎','23 Sep – 22 Oct'],['Scorpio','♏','23 Oct – 21 Nov'],['Sagittarius','♐','22 Nov – 21 Dec'],['Capricorn','♑','22 Dec – 19 Jan'],['Aquarius','♒','20 Jan – 18 Feb'],['Pisces','♓','19 Feb – 20 Mar']];
+  const s=SG[S.horoSign]; return `<div class="scr mist">${topbar('Horoscope')}<div style="display:flex;flex-direction:column;gap:16px;padding:4px 0 24px">
+  <div class="seg" role="tablist" style="grid-template-columns:repeat(4,minmax(0,1fr));margin:0 20px">${Object.keys(P).map(k=>`<button role="tab" aria-selected="${k===S.horoPeriod}" class="${k===S.horoPeriod?'on':''}" data-period="${k}">${k}</button>`).join('')}</div>
+  <div class="hscroll" role="radiogroup" aria-label="Zodiac sign" style="gap:10px">${SG.map(([n,g],i)=>`<button role="radio" aria-checked="${i===S.horoSign}" data-sign="${i}" style="flex:0 0 64px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--ink);padding:0"><span style="width:56px;height:56px;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:24px;${i===S.horoSign?'background:var(--indigo);color:var(--gold)':'background:#fff;border:1px solid var(--line);color:var(--indigo)'}">${g}&#xFE0E;</span>${n}</button>`).join('')}</div>
+  <section style="margin:0 20px;background:var(--indigo);color:#fff;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:6px"><span class="small" style="color:var(--gold);font-weight:600">${P[S.horoPeriod][0]} · ${P[S.horoPeriod][1]}</span><span class="disp" style="font-size:26px">${s[0]}</span><span class="small" style="color:var(--soft)">${s[2]}</span></section>
+  ${['Overview','Love & relationships','Career & money','Health'].map(t=>`<section class="card cardpad" style="margin:0 20px;display:flex;flex-direction:column;gap:6px"><h2 class="h3">${t}</h2><p style="font-size:14px;line-height:1.55;color:#6F6B8C;font-style:italic">[${t} text — content source to be confirmed]</p></section>`).join('')}</div></div>`; },
+
+profile(){ if(S.guest) return `<div class="scr mist"><div class="pad grow" style="padding-top:20px"><h1 class="h1">Profile</h1><div class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px"><p class="lead">You’re browsing as a guest. Log in to save birth profiles, chat with astrologers and buy reports.</p><button class="btn" data-go="login">Log in with mobile number</button></div><div class="card list" style="overflow:hidden">${[['Grievance & support','grievance','help']].map(([l,r,i])=>`<button class="li" data-go="${r}">${ic(i,20)}<span style="flex:1">${l}</span><span class="muted">${ic('next',18)}</span></button>`).join('')}</div></div></div>${nav('profile')}`;
+  const G=[['Account',[['Edit profile','editProfile','edit'],['Birth profiles','birthProfiles','family']]],['Activity',[['Chat history','@chats','chat'],['Transactions & invoices','transactions','card'],['My reports','@myreports','doc']]],['Help',[['Grievance & support','grievance','help']]],['',[['Delete my account','deleteAccount','trash']]]];
+  return `<div class="scr mist"><div class="pad" style="padding-top:20px;gap:18px"><h1 class="h1">Profile</h1>
+  <button data-go="editProfile" style="background:var(--indigo);color:#fff;border:0;border-radius:20px;padding:16px;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer"><span class="av" style="width:56px;height:56px;background:var(--gold);color:var(--indigo);font-size:18px">${initials(me())}</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><span class="disp" style="font-size:20px">${esc(me())}</span><span class="small" style="color:var(--soft)">+91 ${esc(S.user.phone||'98765 43210')}</span></span><b style="color:var(--gold);font-size:13px">Edit</b></button>
+  ${G.map(([t,items])=>`<section style="display:flex;flex-direction:column;gap:8px">${t?`<h2 class="small muted" style="margin:0 4px;font-weight:700;letter-spacing:.6px;text-transform:uppercase">${t}</h2>`:''}<div class="card list" style="overflow:hidden">${items.map(([l,r,i])=>`<button class="li" data-go="${r}" style="${r==='deleteAccount'?'color:var(--bad)':''}">${ic(i,20)}<span style="flex:1">${l}</span><span class="muted">${ic('next',18)}</span></button>`).join('')}</div></section>`).join('')}
+  <button class="btn outline" data-act="logout">Log out</button></div></div>${nav('profile')}`; },
+
+editProfile(){ return `<div class="scr">${topbar('Edit profile')}<div class="pad grow" style="padding:8px 24px 28px;gap:20px">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="av" style="width:90px;height:90px;background:var(--gold);color:var(--indigo);font-size:28px">${initials(me())}</span><button class="link" data-act="toast" data-msg="Photo picker opens here">Change photo</button></div>
+  <div class="field"><label for="ename">Name</label><input class="input" id="ename" data-model="user.name" value="${esc(S.user.name)}"></div>
+  <div class="field"><label for="edob">Date of birth</label><input class="input" id="edob" type="date" data-model="user.dob" value="${esc(S.user.dob)}"></div>
+  <div class="field"><span class="lbl">Mobile number</span><div class="row input" style="background:var(--mist);justify-content:space-between;padding-right:6px"><span>+91 ${esc(S.user.phone||'98765 43210')}</span><button class="link" data-go="editMobile" style="padding:12px 10px;font-size:14px">Change</button></div><span class="small muted">Changing your number needs OTP verification.</span></div>
+  <span class="grow"></span><button class="btn" data-act="saveProfile">Save changes</button></div></div>`; },
+
+editMobile(){ return `<div class="scr">${topbar('Change mobile number')}<div class="pad grow" style="padding:8px 24px 28px;gap:20px">
+  <p class="lead">We’ll send an OTP to your new number. Your number changes only after it’s verified.</p>
+  <div class="field"><span class="lbl">Current number</span><div class="input row" style="background:var(--mist);border-color:var(--mist);color:var(--muted)">+91 ${esc(S.user.phone||'98765 43210')}</div></div>
+  <div class="field"><label for="newphone">New mobile number</label><div class="row"><span class="prefix">+91</span><input class="input" id="newphone" type="tel" inputmode="numeric" placeholder="Any number works" data-model="newPhone" value="${esc(S.newPhone||'')}"></div></div>
+  <span class="grow"></span><button class="btn" data-act="changeotp">Send OTP</button></div></div>`; },
+
+birthProfiles(){ const all=allProfiles(); return `<div class="scr mist">${topbar('Birth profiles')}<div class="pad" style="padding-top:4px">
+  <p class="lead">Save charts for yourself and family. The selected profile is used for Kundli and Dasha.</p>
+  <div role="radiogroup" aria-label="Active birth profile" style="display:flex;flex-direction:column;gap:10px">${all.map((p,i)=>`<button role="radio" aria-checked="${i===S.activeProfile}" data-pick-profile="${i}" class="card" style="padding:14px;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;color:var(--ink);border:2px solid ${i===S.activeProfile?'var(--indigo)':'var(--line)'}"><span aria-hidden="true" style="width:22px;height:22px;border-radius:11px;border:2px solid ${i===S.activeProfile?'var(--indigo)':'#B9B3D6'};display:flex;align-items:center;justify-content:center;flex:0 0 22px"><span style="width:10px;height:10px;border-radius:5px;background:${i===S.activeProfile?'var(--indigo)':'transparent'}"></span></span><span style="flex:1;display:flex;flex-direction:column;gap:3px"><b>${esc(p.name)} <span class="small muted" style="font-weight:500">· ${esc(p.rel)}</span></b><span class="small muted">${esc(p.dob)} · ${esc(p.time)} · ${esc(p.place)}</span></span></button>`).join('')}</div>
+  <button class="btn outline" style="border-style:dashed" data-act="newprofile">${ic('plus',18)}Add birth profile</button>
+  <button class="btn" data-act="openActiveKundli">Open Kundli for ${esc(all[S.activeProfile].name.split(' ')[0])}</button></div></div>`; },
+
+transactions(){ const keep=t=>S.txFilter==='All'||(S.txFilter==='Consultations'&&t.kind==='c')||(S.txFilter==='Reports'&&t.kind==='r'); const months=[...new Set(S.tx.map(t=>t.month))]; return `<div class="scr mist">${topbar('Transactions')}<div class="pad" style="padding-top:4px">
+  <div class="row" role="tablist">${['All','Consultations','Reports'].map(l=>`<button class="chip ${l===S.txFilter?'on':''}" role="tab" aria-selected="${l===S.txFilter}" data-txf="${l}">${l}</button>`).join('')}</div>
+  ${S.dues?`<div class="card row" style="padding:12px 14px;gap:12px"><span class="av" style="width:40px;height:40px;border-radius:12px;background:var(--cream);color:#8A5300">${ic('chat',20)}</span><span style="flex:1;display:flex;flex-direction:column;gap:2px"><b>${esc(S.dues.name)}</b><span class="small muted">${S.dues.mins} min chat · unpaid</span></span><span style="display:flex;flex-direction:column;align-items:flex-end"><b>₹${S.dues.amount}</b><button class="link" style="color:#8A5300" data-go="summary">Pay now</button></span></div>`:''}
+  ${months.map(m=>{ const items=S.tx.filter(t=>t.month===m&&keep(t)); if(!items.length) return ''; return `<section style="display:flex;flex-direction:column;gap:8px"><h2 class="small muted" style="margin:0 4px;font-weight:700;letter-spacing:.6px;text-transform:uppercase">${m}</h2><div class="card list" style="overflow:hidden">${items.map(t=>`<div class="row" style="padding:10px 14px;gap:12px"><span class="av" style="width:40px;height:40px;border-radius:12px;${t.kind==='c'?'background:#EDEAF7;color:var(--indigo)':'background:var(--cream);color:#8A5300'}">${ic(t.kind==='c'?'chat':'doc',20)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><b style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</b><span class="small muted">${esc(t.sub)}</span></span><span style="display:flex;flex-direction:column;align-items:flex-end"><b>₹${t.amount}</b><button class="link row" style="gap:4px;font-size:12px" data-act="toast" data-msg="Invoice downloaded (prototype)">${ic('download',14)}Invoice</button></span></div>`).join('')}</div></section>`; }).join('')}
+  <p class="small muted" style="text-align:center">All payments are non-refundable.</p></div></div>`; },
+
+reports(){ const store = S.reportsTab==='Store'; return `<div class="scr mist">${topbar('Reports')}<div class="pad" style="padding-top:4px">
+  <div class="seg" role="tablist" style="grid-template-columns:1fr 1fr">${['Store','My reports'].map(t=>`<button role="tab" aria-selected="${t===S.reportsTab}" class="${t===S.reportsTab?'on':''}" data-rtab="${t}">${t}</button>`).join('')}</div>
+  ${store ? REPORTS.map(r=>`<button class="card" data-report="${r.id}" style="padding:14px;display:flex;gap:14px;align-items:center;text-align:left;cursor:pointer;color:var(--ink)"><span style="width:50px;height:62px;border-radius:10px;background:${r.tint[0]};color:${r.tint[1]};display:flex;align-items:center;justify-content:center;flex:0 0 50px">${ic(r.icon,24)}</span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><b style="font-size:15px">${r.title}</b><span class="small muted">${r.desc}</span></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><b>₹${r.price}</b><span class="small" style="font-weight:700;color:#8A5300">Buy</span></span></button>`).join('')
+  : (S.myReports.length? S.myReports.map(m=>{ const r=REPORTS.find(x=>x.id===m.id); return `<div class="card" style="padding:14px;display:flex;gap:14px;align-items:center"><span style="width:50px;height:62px;border-radius:8px;background:#FDECEC;color:var(--bad);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:0 0 50px">PDF</span><span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><b>${r.title}</b><span class="small muted">Bought ${m.date} · for ${esc(m.for)}</span></span>${m.ready?`<button class="iconbtn" style="background:var(--indigo);color:var(--gold)" aria-label="Download ${r.title}" data-act="toast" data-msg="Report downloaded (prototype)">${ic('download',20)}</button>`:`<span class="small" style="font-weight:700;color:#8A5300">Generating…</span>`}</div>`; }).join('') : `<p class="lead">You haven’t bought any reports yet.</p>`)}
+</div></div>`; },
+
+reportDetail(){ const r=REPORTS.find(x=>x.id===S.reportId); const all=allProfiles(); return `<div class="scr mist"><header style="background:${r.tint[0]};padding:4px 20px 22px;display:flex;flex-direction:column;gap:12px;flex:0 0 auto"><div class="topbar" style="padding:0;margin-left:-10px"><button class="iconbtn" data-act="back" aria-label="Back">${ic('back',24)}</button></div><div class="row" style="gap:16px"><span style="width:80px;height:104px;border-radius:12px;background:${r.tint[1]};color:var(--gold);display:flex;align-items:center;justify-content:center;flex:0 0 80px">${ic(r.icon,34)}</span><div style="display:flex;flex-direction:column;gap:6px"><h1 class="h1" style="font-size:24px">${r.title}</h1><span class="small" style="color:#3E3A5E">${r.desc}</span><b style="font-size:20px">₹${r.price}</b></div></div></header>
+  <div class="pad grow"><fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px"><legend class="h3" style="padding:0;margin-bottom:10px">Prepare this report for</legend>${all.map((p,i)=>`<label class="card row" style="padding:12px 14px;gap:12px;cursor:pointer;border:2px solid ${i===S.reportFor?'var(--indigo)':'var(--line)'}"><input type="radio" name="rfor" data-rfor="${i}" ${i===S.reportFor?'checked':''} style="width:20px;height:20px;margin:0;accent-color:var(--indigo)"><span style="display:flex;flex-direction:column;gap:2px"><b>${esc(p.name)} (${esc(p.rel.toLowerCase())})</b><span class="small muted">${esc(p.dob)} · ${esc(p.time)} · ${esc(p.place)}</span></span></label>`).join('')}</fieldset>
+  <p class="small muted">Payments are non-refundable. Download the PDF from My reports once it’s ready.</p><span class="grow"></span><button class="btn" data-act="buyreport">Buy for ₹${r.price}</button></div></div>`; },
+
+grievance(){ return `<div class="scr mist">${topbar('Grievance & support')}<div class="pad" style="padding-top:4px">
+  <section style="background:var(--indigo);color:#fff;border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px"><span class="small" style="color:var(--soft)">Email us to raise a grievance or ask for help</span><b style="font-size:20px;user-select:all">grievance@astroapp.in</b><button class="btn gold" style="height:46px;font-size:15px" data-act="copyemail">${ic('copy',18)}Copy email address</button></section>
+  <section class="card cardpad" style="display:flex;flex-direction:column;gap:8px"><h2 class="h3">Include in your email</h2><span>• Your registered mobile number</span><span>• Session ID or transaction ID, if it’s about a payment</span><span>• What happened and what you’d like us to do</span></section>
+  <section class="card cardpad" style="display:flex;flex-direction:column;gap:8px"><h2 class="h3">Your data rights (DPDP Act)</h2><p style="font-size:14px;line-height:1.5;color:#3E3A5E">You can see and correct your details in Edit profile, and delete your account at any time.</p>${S.guest?'':`<button class="link" style="align-self:flex-start" data-go="deleteAccount">Delete my account</button>`}</section></div></div>`; },
+
+deleteAccount(){ return `<div class="scr">${topbar('Delete account')}<div class="pad grow" style="padding:8px 24px 28px">
+  <span style="width:56px;height:56px;border-radius:18px;background:var(--bad-bg);color:var(--bad);display:flex;align-items:center;justify-content:center">${ic('trash',28)}</span>
+  <h2 style="font-size:20px">This permanently deletes your profile</h2><p class="lead">As your right under the DPDP Act, you can ask us to erase your personal data. Once deleted, it can’t be recovered.</p>
+  <section class="card cardpad" style="background:var(--mist);border:0;display:flex;flex-direction:column;gap:8px"><b>What will be removed</b><span>• Your name, mobile number, photo and date of birth</span><span>• All saved birth profiles and Kundlis</span><span>• Your chat history and purchased reports</span></section>
+  <span class="grow"></span><label style="display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45;cursor:pointer"><input type="checkbox" id="delok" data-check="delOk" ${S.delOk?'checked':''} style="width:22px;height:22px;margin:0;accent-color:var(--bad)"><span>I understand my account and data will be deleted permanently.</span></label>
+  <button class="btn danger" data-act="deleteacc">Delete my account</button><button class="btn ghost" data-act="back">Keep my account</button></div></div>`; }
+};
+Object.keys(SCREENS).forEach(k=>ROUTES.add(k));
+
+/* ---------- kundli section views ---------- */
+const PANCHANG = () => `<section style="background:var(--indigo);color:#fff;border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center"><span class="disp" style="font-size:22px">Wed, 18 Nov 2026</span><span class="small" style="color:var(--soft)">Kartika · Shukla paksha · Jaipur</span></section>
+  <section class="grid2">${[['Sunrise','06:52 AM'],['Sunset','05:34 PM'],['Moonrise','12:41 PM'],['Moonset','11:58 PM']].map(([k,v])=>`<div class="card cardpad" style="display:flex;flex-direction:column;gap:4px"><span class="small muted">${k}</span><b style="font-size:16px">${v}</b></div>`).join('')}</section>
+  <section class="card" style="padding:4px 16px">${[['Tithi','Ashtami till 09:12 PM'],['Nakshatra','Dhanishta till 04:20 PM'],['Yoga','Vyaghata till 02:05 AM'],['Karana','Vishti till 10:37 AM'],['Vara','Budhavara (Wednesday)'],['Rahu kaal','12:13 – 01:33 PM'],['Yamaganda','08:12 – 09:32 AM'],['Gulika kaal','10:53 AM – 12:13 PM']].map(([k,v],i)=>`<div class="row" style="justify-content:space-between;padding:11px 0;${i?'border-top:1px solid var(--line2)':''}"><span class="muted">${k}</span><b style="text-align:right">${v}</b></div>`).join('')}</section>`;
+const D1SVG = `<svg role="img" aria-label="North Indian D1 Lagna chart with Leo ascendant" viewBox="-4 -4 328 328" style="width:100%;max-width:320px;align-self:center"><rect x="0" y="0" width="320" height="320" rx="6" fill="#FFFBF2" stroke="#1E1B4B" stroke-width="1.6"></rect><g stroke="#1E1B4B" stroke-width="1.2" fill="none"><path d="M0 0L320 320M320 0L0 320"></path><path d="M160 0L320 160L160 320L0 160Z"></path></g><g font-family="Plus Jakarta Sans, sans-serif" font-size="11" fill="#6F6B8C" text-anchor="middle"><text x="160" y="138">5</text><text x="80" y="66">6</text><text x="62" y="88">7</text><text x="138" y="164">8</text><text x="62" y="248">9</text><text x="80" y="266">10</text><text x="160" y="190">11</text><text x="240" y="266">12</text><text x="258" y="248">1</text><text x="182" y="164">2</text><text x="258" y="88">3</text><text x="240" y="66">4</text></g><g font-family="Plus Jakarta Sans, sans-serif" font-size="14" font-weight="700" fill="#1E1B4B" text-anchor="middle"><text x="160" y="72">Su</text><text x="160" y="92" font-size="10" fill="#9A5B00">ASC</text><text x="80" y="32">Me Ve</text><text x="80" y="164">Ma</text><text x="28" y="245">Ra</text><text x="160" y="250">Mo</text><text x="292" y="245">Ju</text><text x="240" y="164">Sa</text><text x="292" y="85">Ke</text></g></svg>`;
+const DASHA = {
+  Vimshottari:{col:'Mahadasha',cur:'Jupiter – Venus',span:'Jupiter mahadasha · Venus antardasha until Mar 2028',rows:[['Mars','Aug 1996','Feb 1999'],['Rahu','Feb 1999','Feb 2017'],['Jupiter','Feb 2017','Feb 2033',1],['Saturn','Feb 2033','Feb 2052'],['Mercury','Feb 2052','Feb 2069'],['Ketu','Feb 2069','Feb 2076'],['Venus','Feb 2076','Feb 2096']]},
+  Char:{col:'Sign',cur:'Scorpio',span:'Scorpio Char dasha until Aug 2029',rows:[['Leo','Aug 1996','Aug 2005'],['Cancer','Aug 2005','Aug 2012'],['Gemini','Aug 2012','Aug 2021'],['Scorpio','Aug 2021','Aug 2029',1],['Libra','Aug 2029','Aug 2040'],['Virgo','Aug 2040','Aug 2046']]},
+  Yogini:{col:'Yogini',cur:'Sankata (Rahu)',span:'Sankata dasha until Jun 2032',rows:[['Bhramari','Jun 2002','Jun 2006'],['Bhadrika','Jun 2006','Jun 2011'],['Ulka','Jun 2011','Jun 2017'],['Siddha','Jun 2017','Jun 2024'],['Sankata','Jun 2024','Jun 2032',1],['Mangala','Jun 2032','Jun 2033']]}
+};
+const KVIEW = {
+  'Overview'(){ const p=kp(); const T=(l,t,i,full)=>`<button class="tile" data-ktab="${t}" ${full?'style="grid-column:1/-1"':''}><span class="ib">${ic(i,20)}</span><span>${l}</span></button>`;
+    return `<section class="card" style="padding:6px 16px"><h2 class="h3" style="margin:12px 0 4px">Birth details</h2><dl style="margin:0;display:grid;grid-template-columns:1fr 1fr;column-gap:12px">${[['Gender',S.kform.gender],['Date of birth',p.dob],['Time of birth',p.time],['Place of birth',p.place],['Ascendant','Leo'],['Moon sign','Aquarius'],['Sun sign','Leo'],['Nakshatra','Dhanishta']].map(([k,v])=>`<div style="padding:10px 0;border-top:1px solid var(--line2)"><dt class="small muted">${k}</dt><dd style="margin:2px 0 0;font-weight:700">${esc(v)}</dd></div>`).join('')}</dl></section>
+    ${[['Charts',[['D1 · Lagna','chart'],['D9 · Navamsha','chart'],['Moon chart','chart'],['Chalit chart','chart'],['Karakamsha','chart'],['Swamsha','chart']]],['Planets & strength',[['Planets','orbit'],['Ashtakvarga','grid'],['Shadbala','bars'],['Friendship','link']]],['More details',[['Birth details','cal'],['Panchang','cal'],['Person details','user'],['Ghatak & favourable','shield']]]].map(([g,items])=>`<section style="display:flex;flex-direction:column;gap:10px"><h2 class="h2" style="font-size:19px">${g}</h2><div class="grid2">${items.map(([l,i])=>T(l,l,i)).join('')}</div></section>`).join('')}
+    <section style="display:flex;flex-direction:column;gap:10px"><h2 class="h2" style="font-size:19px">Dasha</h2><div class="grid2">${T('Vimshottari, Char & Yogini','Dasha','time',1)}</div></section>`; },
+  'D1 · Lagna'(){ return `<section class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px"><div class="row" style="justify-content:space-between"><h2 class="h2">D1 · Lagna chart</h2><span class="small muted">North Indian</span></div>${D1SVG}<p class="small muted" style="text-align:center">Small numbers are signs (1 Aries … 12 Pisces)</p></section><section class="grid2">${[['Ascendant','Leo'],['Moon sign','Aquarius'],['Sun sign','Leo'],['Nakshatra','Dhanishta']].map(([k,v])=>`<div class="card cardpad"><span class="small muted">${k}</span><br><b style="font-size:16px">${v}</b></div>`).join('')}</section>`; },
+  'Planets'(){ return `<h2 class="h2">Planetary positions</h2><div class="card" style="overflow:hidden"><table><thead><tr><th scope="col">Planet</th><th scope="col">House</th><th scope="col">Sign</th><th scope="col" style="text-align:right">Degree</th></tr></thead><tbody>${[['Ascendant',1,'Leo','12°24′'],['Sun',1,'Leo','27°48′'],['Moon',7,'Aquarius','03°15′'],['Mars',4,'Scorpio','18°02′'],['Mercury',2,'Virgo','05°36′'],['Jupiter',9,'Aries','21°10′'],['Venus',2,'Virgo','14°53′'],['Saturn',10,'Taurus','09°41′'],['Rahu',5,'Sagittarius','24°07′'],['Ketu',11,'Gemini','24°07′']].map(([a,b,c,d])=>`<tr><th scope="row">${a}</th><td class="num">${b}</td><td>${c}</td><td class="num" style="text-align:right">${d}</td></tr>`).join('')}</tbody></table></div>`; },
+  'Dasha'(){ const d=DASHA[S.dasha]; return `<div class="seg" role="tablist" style="grid-template-columns:repeat(3,minmax(0,1fr))">${Object.keys(DASHA).map(k=>`<button role="tab" aria-selected="${k===S.dasha}" class="${k===S.dasha?'on':''}" data-dasha="${k}">${k}</button>`).join('')}</div><section style="background:var(--indigo);color:#fff;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:4px"><span class="small" style="color:var(--soft)">Running now</span><span class="disp" style="font-size:22px">${d.cur}</span><span style="font-size:13px;color:var(--gold)">${d.span}</span></section><div class="card" style="overflow:hidden"><table><thead><tr><th scope="col">${d.col}</th><th scope="col">From</th><th scope="col">To</th></tr></thead><tbody>${d.rows.map(([n,f,t,now])=>`<tr ${now?'style="background:var(--cream)"':''}><th scope="row">${n}${now?' · now':''}</th><td class="num">${f}</td><td class="num">${t}</td></tr>`).join('')}</tbody></table></div>`; },
+  'Panchang'(){ return PANCHANG(); },
+  'Birth details'(){ const p=kp(); return `<section class="card" style="padding:4px 16px">${[['Name',p.name],['Date of birth',p.dob],['Time of birth',p.time],['Place of birth',p.place],['Latitude','26°55′ N'],['Longitude','75°49′ E'],['Timezone','IST (UTC+5:30)'],['Ayanamsa','Lahiri']].map(([k,v],i)=>`<div class="row" style="justify-content:space-between;padding:12px 0;${i?'border-top:1px solid var(--line2)':''}"><span class="muted">${k}</span><b>${esc(v)}</b></div>`).join('')}</section>`; },
+  _generic(){ return `<section class="card" style="padding:24px 18px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center"><span class="tile" style="border:0;padding:0;min-height:0"><span class="ib" style="width:56px;height:56px;border-radius:16px">${ic('chart',28)}</span></span><h2 class="h2">${esc(S.kTab)}</h2><p class="lead">This section is calculated from the birth details. Its detailed screen isn’t designed yet in this prototype.</p><button class="btn outline sm" data-ktab="Overview">Back to all sections</button></section>`; }
+};
+
+/* ---------- sheets ---------- */
+const SHEETS = {
+  login(){ return `<div class="sheetwrap" data-act="closesheet"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t" data-stop><span class="grab"></span><span style="width:56px;height:56px;border-radius:18px;background:var(--cream);color:#8A5300;display:flex;align-items:center;justify-content:center">${ic('lock',28)}</span><h2 id="sh-t" class="h1" style="font-size:24px">Log in to consult</h2><p class="lead">You can browse Kundli, horoscope and astrologers as a guest. To chat with an astrologer, log in with your mobile number.</p><button class="btn" data-go="login">Log in with mobile number</button><button class="btn ghost" data-act="closesheet">Not now</button></div></div>`; },
+  dues(){ const d=S.dues; return `<div class="sheetwrap" data-act="closesheet"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t" data-stop><span class="grab"></span><span style="width:56px;height:56px;border-radius:18px;background:var(--cream);color:#8A5300;display:flex;align-items:center;justify-content:center">${ic('card',28)}</span><h2 id="sh-t" class="h1" style="font-size:24px">Clear your pending payment</h2><p class="lead">You have an unpaid session. Pay it to book a new consultation with any astrologer.</p><div class="card row" style="padding:14px;gap:12px">${av(d.name,44,ASTRO.findIndex(x=>x.name===d.name))}<span style="flex:1;display:flex;flex-direction:column;gap:2px"><b>${esc(d.name)}</b><span class="small muted">${d.mins} min × ₹${d.rate}/min</span></span><b style="font-size:17px">₹${d.amount}</b></div><button class="btn" data-go="summary">Pay ₹${d.amount}</button><button class="btn ghost" data-act="closesheet">Later</button></div></div>`; },
+  sort(){ const opts=[['rating','Rating: high to low'],['ratingAsc','Rating: low to high'],['exp','Experience: high to low'],['expAsc','Experience: low to high'],['az','Name: A to Z'],['za','Name: Z to A']]; return `<div class="sheetwrap" data-act="closesheet"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t" data-stop><span class="grab"></span><h2 id="sh-t" class="h3" style="font-size:17px">Sort astrologers</h2><div role="radiogroup" class="list">${opts.map(([k,l])=>`<button class="li" role="radio" aria-checked="${k===S.astroSort}" data-sort="${k}"><span style="flex:1">${l}</span>${k===S.astroSort?`<span style="color:var(--indigo)">${ic('check',20)}</span>`:''}</button>`).join('')}</div></div></div>`; },
+  newprofile(){ return `<div class="sheetwrap" data-act="closesheet"><form class="sheet" id="npform" role="dialog" aria-modal="true" aria-labelledby="sh-t" data-stop><span class="grab"></span><h2 id="sh-t" class="h3" style="font-size:17px">Add birth profile</h2><div class="field"><label for="npname">Name</label><input class="input" id="npname" placeholder="e.g. Kabir Verma"></div><div class="field"><label for="nprel">Relation</label><input class="input" id="nprel" placeholder="e.g. Nephew"></div><div class="grid2"><div class="field"><label for="npdob">Date of birth</label><input class="input" id="npdob" type="date" style="padding:0 10px"></div><div class="field"><label for="nptime">Time</label><input class="input" id="nptime" type="time" style="padding:0 10px"></div></div><div class="field"><label for="npplace">Place</label><input class="input" id="npplace" placeholder="City"></div><button class="btn" type="submit">Save profile</button></form></div>`; }
+};
+
+/* ---------- render ---------- */
+function render(scrollTop){
+  const name = cur();
+  const fn = SCREENS[name] || SCREENS.home;
+  const keep = !scrollTop && document.activeElement && document.activeElement.id ? {id:document.activeElement.id, s:document.activeElement.selectionStart} : null;
+  const sc = $phone.querySelector('.scr'); const prevScroll = sc && !scrollTop ? sc.scrollTop : 0;
+  $phone.innerHTML = fn() + (S.sheet && SHEETS[S.sheet] ? SHEETS[S.sheet]() : '') + (S.toast ? `<div class="toast" role="status">${esc(S.toast)}</div>` : '');
+  const nsc = $phone.querySelector('.scr'); if(nsc) nsc.scrollTop = prevScroll;
+  if(name==='chat'){ const log=document.getElementById('chatlog'); if(log) log.scrollTop=log.scrollHeight; }
+  if(name==='kundliView'){ const t=$phone.querySelector('#ktabs .tab.on'); if(t) t.scrollIntoView({block:'nearest',inline:'center'}); }
+  if(keep){ const el=document.getElementById(keep.id); if(el){ el.focus(); try{ if(keep.s!=null) el.setSelectionRange(keep.s,keep.s);}catch(e){} } }
+  if(scrollTop){ const h = name; try{ if(location.hash.slice(1)!==h) history.replaceState(null,'','#'+h); }catch(e){} }
+}
+
+/* ---------- actions ---------- */
+function setPath(path, val){ const parts=path.split('.'); let o=S; while(parts.length>1) o=o[parts.shift()]; o[parts[0]]=val; }
+function consult(id){ S.astroId=id; S.chatAstro=id; if(S.guest){ S.sheet='login'; render(); return; } if(S.dues){ S.sheet='dues'; render(); return; } go('waiting'); clearTimeout(consult.t); consult.t=setTimeout(()=>{ if(cur()==='waiting'){ const a=ASTRO.find(x=>x.id===S.chatAstro); S.chat=[{me:false,text:`Namaste ${S.user.name?S.user.name.split(' ')[0]:''}. I have your Kundli open — Leo ascendant, Moon in Aquarius. How can I help?`}]; S.chatStart=Date.now(); go('chat',true);} },2600); }
+const REPLIES=['Let me look at your 10th house and the current dasha…','You are in Jupiter mahadasha with Venus antardasha until March 2028.','April onwards looks more supportive for this. Plan from then.','Keep the conversation here on the app, please. Anything else?'];
+function sendMsg(text){ text=text.trim(); if(!text) return; const bad=/(\d[\s-]?){7,}|@|https?:\/\/|www\.|\.com\b|whatsapp|telegram|call me/i.test(text); if(bad){ S.chat.push({blocked:true}); render(); return; } S.chat.push({me:true,text}); render(); const n=S.chat.filter(m=>m.me).length; setTimeout(()=>{ if(cur()!=='chat') return; S.chat.push({me:false,text:REPLIES[(n-1)%REPLIES.length]}); render(); },1100); }
+function endChat(){ const a=ASTRO.find(x=>x.id===S.chatAstro); const mins=Math.max(3, Math.round((Date.now()-S.chatStart)/60000)+S.chat.length); S.dues={name:a.name, astro:a.id, mins, rate:a.price, amount:mins*a.price, msgs:S.chat.filter(m=>!m.blocked)}; go('summary',true); }
+
+$phone.addEventListener('click', e=>{
+  const stop = e.target.closest('[data-stop]'); const el = e.target.closest('[data-go],[data-go-replace],[data-act],[data-tab],[data-astro],[data-consult],[data-filter-chip],[data-sort],[data-ktab],[data-dasha],[data-period],[data-sign],[data-gender],[data-place],[data-openprofile],[data-pick-profile],[data-txf],[data-rtab],[data-report],[data-rate],[data-pastchat]');
+  if(!el) return;
+  if(stop && el.matches('.sheetwrap')) return;
+  const d = el.dataset;
+  if(d.go){ if(d.go==='@chats') return tabRoot('chats'); if(d.go==='@myreports'){ S.reportsTab='My reports'; return go('reports'); } if(d.go==='planetsQuick'){ S.kTab='Planets'; return go('kundliView'); } return go(d.go); }
+  if(d.goReplace) return go(d.goReplace, true);
+  if(d.tab) return tabRoot(d.tab);
+  if(d.astro){ S.astroId=d.astro; return go('astroProfile'); }
+  if(d.consult) return consult(d.consult);
+  if(d.filterChip){ S.astroFilter=d.filterChip; return render(); }
+  if(d.sort){ S.astroSort=d.sort; S.sheet=null; return render(); }
+  if(d.ktab){ S.kTab=d.ktab; if(cur()!=='kundliView') return go('kundliView'); return render(true); }
+  if(d.dasha){ S.dasha=d.dasha; return render(); }
+  if(d.period){ S.horoPeriod=d.period; return render(); }
+  if(d.sign){ S.horoSign=+d.sign; return render(); }
+  if(d.gender){ S.kform.gender=d.gender; return render(); }
+  if(d.place){ S.kform.place=d.place; S.placeQuery=''; return back(); }
+  if(d.openprofile){ S.activeProfile=+d.openprofile; S.kTab='Overview'; return go('kundliView'); }
+  if(d.pickProfile){ S.activeProfile=+d.pickProfile; return render(); }
+  if(d.txf){ S.txFilter=d.txf; return render(); }
+  if(d.rtab){ S.reportsTab=d.rtab; return render(); }
+  if(d.report){ S.reportId=d.report; S.reportFor=0; if(S.guest){ S.sheet='login'; return render(); } return go('reportDetail'); }
+  if(d.rate){ S.rating=+d.rate; return render(); }
+  if(d.pastchat){ S.pastIdx=+d.pastchat; return go('pastChat'); }
+  switch(d.act){
+    case 'back': return back();
+    case 'toast': return toast(d.msg);
+    case 'skip': S.guest=true; S.stack=['home']; return render(true);
+    case 'getotp': S.otpFor='login'; return go('otp');
+    case 'verify': if(S.otpFor==='change'){ S.user.phone=S.newPhone||S.user.phone; S.stack=S.stack.filter(x=>x!=='otp'&&x!=='editMobile'); toast('Mobile number updated'); return render(true); } S.guest=false; S.user.phone=S.pendingPhone||'98765 43210'; if(S.newUser){ S.stack=['consent']; return render(true);} S.stack=['home']; return render(true);
+    case 'finishOnboarding': if(!S.user.name) S.user.name='Ananya Verma'; S.newUser=false; S.stack=['home']; return render(true);
+    case 'service': S.astroFilter=d.filter; return tabRoot('astrologers');
+    case 'sortsheet': S.sheet='sort'; return render();
+    case 'closesheet': if(e.target.closest('[data-stop]') && !e.target.closest('.sheet [data-act="closesheet"]')) return; S.sheet=null; return render();
+    case 'endchat': return endChat();
+    case 'pay': { const d2=S.dues||{name:'Acharya Raghav Sharma',astro:'rs',mins:12,rate:15,amount:180}; S.lastPaid=d2; S.history.unshift({astro:d2.astro||'rs', date:'Today', mins:d2.mins, amount:d2.amount, paid:true, rated:false, last:(d2.msgs&&d2.msgs.length?d2.msgs[d2.msgs.length-1].text:'Thank you.'), msgs:d2.msgs}); S.tx.unshift({title:d2.name, sub:'Today · '+d2.mins+' min chat', amount:d2.amount, kind:'c', month:'November 2026'}); S.dues=null; S.rating=5; return go('rate',true); }
+    case 'paylater': { const d2=S.dues; if(d2 && !S.history.find(h=>h.unpaid)) S.history.unshift({astro:d2.astro, date:'Today', mins:d2.mins, amount:d2.amount, paid:false, unpaid:true, last:(d2.msgs&&d2.msgs.length?d2.msgs[d2.msgs.length-1].text:''), msgs:d2.msgs}); S.stack=['home']; toast('Saved as unpaid. Pay before your next session.'); return render(true); }
+    case 'submitreview': { const h=S.history[0]; if(h) h.rated=true; toast('Thanks! Your review is on the astrologer’s profile.'); S.stack=['chats']; return render(true); }
+    case 'skiprate': S.stack=['home']; return render(true);
+    case 'proceedKundli': S.activeProfile=0; S.kTab='Overview'; return go('kundliView');
+    case 'saveProfile': toast('Profile saved'); return back();
+    case 'changeotp': S.otpFor='change'; S.pendingPhone=S.newPhone||''; return go('otp');
+    case 'newprofile': S.sheet='newprofile'; return render();
+    case 'openActiveKundli': S.kTab='Overview'; return go('kundliView');
+    case 'buyreport': { const r=REPORTS.find(x=>x.id===S.reportId); const p=allProfiles()[S.reportFor]; S.myReports.unshift({id:r.id, for:p.name, ready:false, date:'today'}); S.tx.unshift({title:r.title, sub:'Today · report', amount:r.price, kind:'r', month:'November 2026'}); S.reportsTab='My reports'; S.stack.pop(); toast('Payment done. Your report is being generated.'); render(true); setTimeout(()=>{ S.myReports[0].ready=true; if(cur()==='reports') render(); },3500); return; }
+    case 'copyemail': try{ navigator.clipboard.writeText('grievance@astroapp.in').then(()=>toast('Email address copied'),()=>toast('Select the address to copy it')); }catch(err){ toast('Select the address to copy it'); } return;
+    case 'deleteacc': S.guest=true; S.user={name:'',phone:'',dob:''}; S.newUser=true; S.history=[]; S.myReports=[]; S.dues=null; S.delOk=false; S.stack=['login']; toast('Account deleted'); return render(true);
+    case 'logout': S.guest=true; S.stack=['login']; return render(true);
+  }
+});
+$phone.addEventListener('input', e=>{
+  const el=e.target;
+  if(el.dataset.model){ setPath(el.dataset.model, el.value); if(el.dataset.rerender) render(); }
+  if(el.dataset.otp){ if(el.value && el.nextElementSibling) el.nextElementSibling.focus(); }
+});
+$phone.addEventListener('change', e=>{
+  const el=e.target;
+  if(el.dataset.check){ S[el.dataset.check]=el.checked; }
+  if(el.dataset.rfor!=null){ S.reportFor=+el.dataset.rfor; render(); }
+  if(el.dataset.model && el.dataset.rerender) render();
+});
+$phone.addEventListener('keydown', e=>{ if(e.key==='Backspace' && e.target.dataset.otp && !e.target.value && e.target.previousElementSibling) e.target.previousElementSibling.focus(); });
+$phone.addEventListener('submit', e=>{
+  e.preventDefault();
+  if(e.target.id==='chatform'){ const i=e.target.querySelector('#msg'); const v=i.value; i.value=''; sendMsg(v); setTimeout(()=>{ const m=document.getElementById('msg'); if(m) m.focus(); },0); }
+  if(e.target.id==='npform'){ const g=id=>(document.getElementById(id)||{}).value||''; S.profiles.push({name:g('npname')||'New profile', rel:g('nprel')||'Family', dob:fmtDate(g('npdob'))||'—', time:fmtTime(g('nptime'))||'—', place:g('npplace')||'—'}); S.activeProfile=S.profiles.length; S.sheet=null; toast('Birth profile added'); render(); }
+});
+
+/* start */
+const startHash = location.hash.slice(1);
+if(startHash && ROUTES.has(startHash) && startHash!=='splash'){ S.guest=false; S.newUser=false; S.user={name:'Ananya Verma', phone:'98765 43210', dob:'1996-08-14'}; S.stack=['home']; if(startHash!=='home') S.stack.push(startHash); }
+render(true);
+if(cur()==='splash') setTimeout(()=>{ if(cur()==='splash') go('login',true); },1800);
+})();
+</script>
+
+</body></html>
